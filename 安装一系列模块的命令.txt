@@ -1,0 +1,5 @@
+cpanºó
+
+install   Term::Cap HTTPD::Log::Filter Net::LDAP Net::SMTP IME::Base64 Net::IMAP::Simple Spreadsheet::ParseExcel  Text::CSV_XS Benchmark HTTP:: Daemon Array::Compare Algorithm::Diff List::Util HTML::Parser Mail::Sender Time::HiRes Image::Magick  Data::SearchReplace Net::FTP Net::Telnet  Expect XML::Simple Data::Dumper IO::Socket Date::Manip Date::Manip File::Find ExtUtils::Installed DBI 
+Getopt::Std Proc::ProcessTable Shell Time::HiRes  HTML::LinkExtor Net::Telnet Compress::Zlib  Net::POP3 Term::ANSIColor Date::Calc
+

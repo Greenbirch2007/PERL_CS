@@ -1,0 +1,41 @@
+½Å±¾ÈçÏÂ£º
+
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my @modules = (
+    'Data::Dumper',      'POSIX',
+    'Cwd',               'threads',
+    'threads::shared',   'Thread::Queue',
+    'Thread::Semaphore', 'IO::Socket',
+    'Proc::Daemon',      'Time::HiRes',
+    'DBI',               'DBD::mysql',
+    'Algorithm::Diff'
+);
+
+foreach my $module (@modules) {
+    print "Checking required module '$module'...";
+    my $res = \&CheckModule($module);
+    if ($res) {
+        print "Ok!\n";
+        next;
+    }
+
+    print "\n------------------------------------------------------------\n";
+    print "Required module '$module' is not found on this system!\n";
+    print "Install it (run command 'cpan $module') and try again.\n\n";
+    exit(1);
+}
+
+#-----------------------------------------------------------------
+sub CheckModule($) {
+    my $module = shift;
+
+    eval "use $module";
+
+    return 1 unless $@;
+    print "Error!\n $@";
+    return 0;
+}
