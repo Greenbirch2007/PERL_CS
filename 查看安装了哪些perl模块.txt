@@ -1,0 +1,20 @@
+些时候需要查看系统下，安装了哪些perl模块。可以通过下面的方式来查看：
+
+1.  perllocal
+
+# perldoc perllocal
+1
+# perldoc perllocal
+改指令可以列出每个安装的模块的信息，如安装的时间、安装的位置、版本信息等。
+
+
+2. perldoc -t perllocal | grep "Module"
+
+
+3.  instmodsh
+
+该指令是由ExtUtils::Installed模块提供的一个可执行脚本, 用来查看当前安装的模块信息。
+
+4.
+
+(echo l;echo q) | instmodsh | sed -e '1,/:/d' -e '/cmd?/d'

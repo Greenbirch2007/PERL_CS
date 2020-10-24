@@ -1,0 +1,1376 @@
+Perl常用模块总结
+
+(1) Net::FTP
+(2) Net::Telnet
+(3) LWP::Simple, get()
+(4) Expect
+(5) XML::Simple, XMLin()
+(6) Data::Dumper, Dumper()
+(7) IO::Socket
+(8) Date::Manip, DateCalc(), UnixDate()
+(9) Date::Manip, Date_Cmp()
+(10) File::Find, find()
+(11) ExtUtils::Installed, new(), modules(), version()
+(12) DBI, connect(), prepare(), execute(), fetchrow_array()
+(13) Getopt::Std
+(14) Proc::ProcessTable
+(15) Shell
+(16) Time::HiRes, sleep(), time()
+(17) HTML::LinkExtor, links(), parse_file()
+(18) Net::Telnet, open(), print(), getline()
+(19) Compress::Zlib, gzopen(), gzreadline(), gzclose()
+(20) Net::POP3, login(), list(), get()
+(21) Term::ANSIColor
+(22) Date::Calc Calendar(), Today()
+(23) Term::Cap, Tgetend(), Tgoto, Tputs()
+(24) HTTPD::Log::Filter
+(25) Net::LDAP
+(26) Net::SMTP mail(), to(), data(), datasend(), auth()
+(27) MIME::Base64, encode_base64(), decode_base64()
+(28) Net::IMAP::Simple, login(), mailboxes(), select(), get()...
+(29) Bio::DB::GenBank, Bio::SeqIO
+(30) Spreadsheet::ParseExcel
+(31) Text::CSV_XS, parse(), fields(), error_input()
+(32) Benchmark
+(33) HTTP:: Daemon, accept(), get_request()...
+(34) Array::Compare, compare(), full_compare()...
+(35) Algorithm::Diff, diff()
+(36) List::Util, max(), min(), sum(), maxstr(), minstr()...
+(37) HTML::Parser
+(38) Mail::Sender
+(39) Time::HiRes, gettimeofday(), usleep()
+(40) Image::Magick
+(41) Data::SearchReplace
+
+
+
+(1)	Net::FTP
+
+#!/usr/bin/perl -w
+# file: ftp_recent.pl
+# Figure 6.1: Downloading a single file with Net::FTP
+use Net::FTP;
+
+use constant HOST => 'ftp.perl.org';
+use constant DIR => '/pub/CPAN';
+use constant FILE => 'RECENT';
+
+my $ftp = Net::FTP->new(HOST) or die "Couldn't connect: $@\n";
+$ftp->login('anonymous') or die $ftp->message;
+$ftp->cwd(DIR) or die $ftp->message;
+$ftp->get(FILE) or die $ftp->message;
+$ftp->quit;
+
+warn "File retrieved successfully.\n";
+
+
+
+
+(2) Net::Telnet
+
+#!/usr/bin/perl -w
+# file:remoteps.pl
+
+use strict;
+use Net::Telnet;
+use constant HOST => 'phage.cshl.org';
+use constant USER => 'lstein';
+use constant PASS => 'xyzzy';
+
+my $telnet=Net::Telnet->new(HOST);
+$telnet->login(USER,PASS);
+my @lines=$telnet->cmd('ps -ef');
+print @lines;
+
+
+(3) LWP::Simple, get()
+
+#!/usr/bin/perl -w
+use strict;
+use LWP::Simple qw(get);
+
+my $url = shift || "http://www.chinaunix.net";
+my $content = get($url);
+
+print $content;
+
+exit 0;
+#最简单方便的get网页的方法。
+
+
+(4) Expect
+
+#!/usr/bin/perl
+use strict;
+use Expect;
+
+my $timeout = 2;
+my $delay = 1;
+my $cmd = "ssh";
+my @params = qw/202.108.xx.xx -lusername -p22/;
+my $pass = "passwd";
+
+my $exp = Expect->spawn($cmd, @params) or die "Can't spawn $cmd\n";
+$exp->expect($timeout, -re=>'[Pp]assword:');
+$exp->send_slow($delay, "$pass\r\n");
+
+$exp->interact();
+$exp->hard_close();
+
+exit 0;
+
+
+(5) XML::Simple, XMLin()
+
+#!/usr/bin/perl -w
+use strict;
+use XML::Simple;
+my $text = <<xml;
+< ?xml version="1.0"? >
+<web-app>
+<servlet>
+<servlet-name>php</servlet-name>
+<servlet-class>net.php.servlet</servlet-class>
+</servlet>
+<servlet-mapping>
+<servlet-name>php</servlet-name>
+<url-pattern>*.php</url-pattern>
+</servlet-mapping>
+</web-app>
+xml
+my $x = XMLin($text);
+foreach my $tag(keys %$x)
+{
+my %h = %{$$x{$tag}};
+foreach(keys %h)
+{
+print "$tag => ";
+print "$_ => $h{$_}\n";
+}
+}
+exit 0;
+
+
+(6) Data::Dumper, Dumper()
+
+#!/usr/bin/perl -w
+use strict;
+use Data::Dumper;
+
+print Dumper(@INC);
+print Dumper(%ENV);
+exit 0;
+
+
+(7) IO::Socket
+
+#!/usr/bin/perl -w
+use strict;
+use IO::Socket;
+
+my $host = "www.chinaunix.net";
+my $port = "80";
+my $http_head = "GET / HTTP/1.0\nHost: $host:$port\n\n";
+my $sock = IO::Socket::INET->new("$host:$port")
+or die "Socket() error, Reason : $! \n";
+
+print $sock $http_head;
+print <$sock>;
+
+exit 0;
+
+
+(8) Date::Manip, DateCalc(), UnixDate()
+
+#!/usr/bin/perl
+use strict;
+use Date::Manip;
+my $date1 = "Fri Jun 6 18:31:42 GMT 2003";
+my $date2 = "2003/05/06";
+my $flag=&Date_Cmp($date1,$date2);
+
+if($flag<0)
+{
+print "date1 is earlier!\n";
+}
+elsif($flag==0)
+{
+print "the two dates are identical!\n";
+}
+else
+{
+print "date2 is earlier!\n";
+}
+exit 0;
+
+
+(9) Date::Manip, Date_Cmp()
+
+
+
+(10) File::Find, find()
+
+
+#!/usr/bin/perl -w
+use strict;
+use File::Find;
+
+my $file = "access.log";
+my $path = "/";
+
+find(&process, $path);
+
+sub process{ print $File::Find::dir, "$_\n" if(/$file/); }
+
+exit 0;
+
+#用于在unix文件树结构中查找对象。
+
+(11) ExtUtils::Installed, new(), modules(), version()
+
+#!/usr/bin/perl
+use strict;
+use ExtUtils::Installed;
+
+my $inst= ExtUtils::Installed->new();
+my @modules = $inst->modules();
+
+foreach(@modules)
+{
+my $ver = $inst->version($_) || "???";
+printf("%-12s -- %s\n", $_, $ver);
+}
+exit 0;
+
+
+(12) DBI, connect(), prepare(), execute(), fetchrow_array()
+
+#!/usr/bin/perl
+use strict;
+use DBI;
+
+my $dbh = DBI->connect("dbi:mysql:dbname", 'user','passwd', '')
+or die "can't connect!\n";
+my $sql = qq/show variables/;
+my $sth = $dbh->prepare($sql);
+$sth->execute();
+
+while(my @array=$sth->fetchrow_array())
+{
+printf("%-35s", $_) foreach(@array);
+print "\n";
+}
+$dbh -> disconnect();
+exit 0;
+
+
+
+(13) Getopt::Std
+
+#!/usr/bin/perl
+use strict;
+use Getopt::Std;
+
+my %opts;
+getopts("c:hv", %opts);
+
+foreach(keys %opts)
+{
+/c/ && print "welcome to ", $opts{$_} || "ChinaUnix", "!\n";
+/h/ && print "Usage : $0 -[hv] -[c msg] \n";
+/v/ && print "This is demo, version 0.001.001 built for $^O\n";
+}
+exit 0;
+
+
+(14) Proc::ProcessTable
+
+#直接访问Unix进程表，类似ps command。
+
+#!/usr/bin/perl
+use strict;
+use Proc::ProcessTable;
+
+my $pt = new Proc::ProcessTable;
+
+foreach(reverse sort @{$pt->table})
+{
+print $_->pid, " => ";
+print $_->cmndline, "\n";
+}
+exit 0;
+
+
+(15) Shell
+
+#!/usr/bin/perl
+use strict;
+use Shell;
+
+print "now is : ", date();
+print "current time is : ", date("+%T");
+
+my @dirs = ls("-laF");
+foreach(@dirs)
+{
+print if(//$/);#print directory
+}
+exit 0;
+
+#Shell命令直接做为函数，在Perl中调用。
+
+
+(16) Time::HiRes, sleep(), time()
+
+#!/usr/bin/perl
+#Another use of Time::HiRes Module.
+
+use strict;
+use Time::HiRes qw(sleep time);
+
+$| = 1;
+my $before = time;
+for my $i (1..100)
+{
+print "$i\n";
+sleep(0.01);
+}
+printf("time used : %.5f seconds\n", time - $before);
+exit 0;
+
+use Time::HiRes后，此模块提供sleep(), alarm(), time()的增强版以
+取代perl内置的相应函数。
+其中sleep()和alarm()的参数可以是小数。比如sleep(0.1)表示休眠0.1秒，
+time()可以返回浮点数。
+
+
+(17) HTML::LinkExtor, links(), parse_file()
+
+#!/usr/bin/perl
+use strict;
+use HTML::LinkExtor;
+
+my $p = new HTML::LinkExtor;
+$p->parse_file(*DATA);
+
+foreach my $links ($p->links())
+{
+map {print "$_ "} @{$links};
+print "\n";
+}
+exit 0;
+
+__DATA__
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 Strict//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html"/>
+<title>CPAN</title>
+<!-- Copyright Jarkko Hietaniemi <jhi@iki.fi> 1998-2002
+All Rights Reserved.
+The CPAN Logo provided by J.C. Thorpe.
+You may distribute this document either under the Artistic License
+(comes with Perl) or the GNU Public License, whichever suits you.
+
+You are not allowed to remove or alter these comments. -->
+<!-- $Id: cpan-index.html,v 1.7 2003/02/17 10:23:46 jhi Exp $ -->
+<link rev="made" href="mailto:cpan@perl.org"></link>
+<style type="text/css">
+<!--
+
+body{
+color:black;
+background:white;
+margin-left:2%;
+margin-right:2%;
+}
+
+h1{
+text-align:center;
+}
+
+img {
+vertical-align: 50%;
+border: 0;
+}
+
+.left{
+text-align:left;
+float:none;
+}
+
+.center{
+text-align:center;
+float:none;
+}
+
+.right{
+text-align:right;
+float:none;
+}
+
+-->
+</style>
+</head>
+<body>
+
+<table width="100%">
+<tr>
+<td rowspan="2">
+<div class="left">
+<img src="misc/jpg/cpan.jpg"
+alt="[CPAN Logo]" height="121" width="250"/>
+</div>
+</td>
+<td>
+<div class="right">
+<h1><a id="top">Comprehensive Perl Archive Network</a></h1>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="center">
+2003-06-10 online since 1995-10-26<br/>1662 MB 246 mirrors<br/>2903 authors 4767 modules
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+<p class="left">
+Welcome to CPAN! Here you will find All Things Perl.
+</p>
+</td>
+<td>
+</td>
+</tr>
+</table>
+
+<hr/>
+
+<table width="100%">
+
+<tr>
+
+<td>
+
+<h1>Browsing</h1>
+<ul>
+<li><a href="modules/index.html">Perl modules</a></li>
+<li><a href="scripts/index.html">Perl scripts</a></li>
+<li><a href="ports/index.html">Perl binary distributions ("ports")</a></li>
+<li><a href="src/README.html">Perl source code</a></li>
+<li><a href="RECENT.html">Perl recent arrivals</a></li>
+<li><a href="http://search.cpan.org/recent">recent</a> Perl modules</li>
+<li><a href="SITES.html">CPAN _fcksavedurl=""SITES.html">CPAN" sites</a> list</li>
+<li><a href="http://mirrors.cpan.org/">CPAN sites</a> map</li>
+</ul>
+
+</td>
+
+<td>
+
+<h1>Searching</h1>
+
+<ul>
+<li><a href="http://kobesearch.cpan.org/">Perl core and CPAN modules documentation </a> (Randy Kobes)</li>
+<li><a href="http://www.perldoc.com/">Perl core documentation</a> (Carlos Ramirez)</li>
+<li><a href="http://search.cpan.org/">CPAN modules, distributions, and authors</a> (search.cpan.org)</li>
+<li><a href="http://wait.cpan.org/">CPAN modules documentation</a> (Ulrich Pfeifer)</li>
+</ul>
+
+<h1>FAQ etc</h1>
+
+<ul>
+<li><a href="misc/cpan-faq.html">CPAN Frequently Asked Questions</a></li>
+<li><a href="http://lists.cpan.org/">Perl Mailing Lists</a></li>
+<li><a href="http://bookmarks.cpan.org/">Perl Bookmarks</a></li>
+</ul>
+
+<p><small>
+Yours Eclectically, The Self-Appointed Master Librarian (OOK!) of the CPAN<br/>
+<i>Jarkko Hietaniemi</i>
+<a href="mailto:cpan@perl.org">cpan@perl.org</a>
+<a href="disclaimer.html">[Disclaimer]</a> _fcksavedurl=""disclaimer.html">[Disclaimer]</a>"
+</small>
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+<hr/>
+
+<table width="100%">
+<tr>
+
+<td>
+<div class="left">
+<a href="http://validator.w3.org/check?uri=http%3A%2F%2Fwww.cpan.org%2Findex.html">
+<img src="misc/gif/valid-xhtml10.gif" alt="Valid XHTML 1.0!" height="31" width="88"/></a>
+<a href="http://jigsaw.w3.org/css-validator/validator?uri=http%3A%2F%2Fwww.cpan.org%2Findex.html">
+<img src="misc/gif/vcss.gif" alt="[Valid CSS]" height="31" width="88"/></a>
+</div>
+</td>
+<td>
+<div class="right">
+
+<table width="100%">
+
+<tr>
+<td class="right">
+<small>
+CPAN master site hosted by
+</small>
+</td>
+</tr>
+<tr>
+<td class="right">
+<a href="http://www.csc.fi/suomi/funet/verkko.html.en/"><img src="misc/gif/funet.gif" alt="FUNET" height="25" width="88"/></a>
+</td>
+</tr>
+</table>
+
+</div>
+</td>
+
+</tr>
+</table>
+
+</body>
+</html>
+
+
+(18) Net::Telnet, open(), print(), getline()
+
+#!/usr/bin/perl
+use strict;
+use Net::Telnet;
+
+my $p = Net::Telnet->new();
+my $h = shift || "www.chinaunix.net";
+
+$p->open(Host => $h, Port => 80);
+$p->print("GET /\n");
+while(my $line = $p->getline())
+{
+print $line;
+}
+exit 0;
+
+
+(19) Compress::Zlib, gzopen(), gzreadline(), gzclose()
+
+#!/usr/bin/perl
+use strict;
+use Compress::Zlib;
+
+my $gz = gzopen("a.gz", "rb");
+
+while( $gz->gzreadline(my $line) > 0 )
+{
+chomp $line;
+print "$line\n";
+}
+
+$gz->gzclose();
+exit 0;
+
+#直接使用shell的zmore, zless, zcat打开文件也不错，但是如果gz文件很大，还是应该选择zlib。
+
+
+(20) Net::POP3, login(), list(), get()
+
+#!/usr/bin/perl
+use strict;
+use Net::POP3;
+use Data::Dumper;
+
+my $user = "user";
+my $pass = shift or die "Usage : $0 passwd\n";
+my $host = "pop3.web.com";#pop3 address
+
+my $p = Net::POP3->new($host) or die "Can't connect $host!\n";
+$p->login($user, $pass) or die "user or passwd error!\n";
+my $title = $p->list or die "No mail for $user\n";
+
+foreach my $h(keys %$title)
+{
+my $msg = $p->get($h);
+print @$msg;
+}
+$p->quit;
+exit 0;
+
+telnet pop3.web.com 110 也可以直接连到pop3 server上，然后通过pop3命令与邮件服务器交互，
+
+简单的命令有：
+
+QUOTE:USER name
+PASS string
+STAT
+LIST [n]
+RETR msg
+DELE msg
+NOOP
+RSET
+QUIT
+
+
+有兴趣的朋友可以试一试。
+这样，也就可以利用Net::Telnet来做一个收信件的简单程序。
+
+
+
+(21) Term::ANSIColor
+
+#!/usr/bin/perl
+use strict;
+use Term::ANSIColor qw(:constants);
+
+$Term::ANSIColor::AUTORESET = 1;
+
+$| = 1;
+my $str = "Welcome to chinaunix ^_^!\n";
+
+for my $i(0..length($str)-1)
+{
+print BOLD RED substr($str, $i, 1);
+select(undef, undef, undef, 0.3);
+}
+exit 0;
+
+查看ANSIColor.pm可以得知作者是利用ANSI转义序列，改变终端字符颜色的。
+print "\e[34m\n";
+即是改变前景色为blue;
+
+shell命令为echo -e "\033[31m";#改变前景色为红色。
+(freeBSD，Solaris下此命令测试OK)
+
+
+#!/usr/bin/perl
+use strict;
+use Term::ANSIColor qw(:constants);
+
+$Term::ANSIColor::AUTORESET = 1;
+
+$| = 1;
+
+print "\e[20;40H";
+my $str = "Welcome to chinaunix ^_^!\n";
+
+print BOLD BLINK $str;
+exit 0;
+
+
+转义序列echo -e "\033[20;40H";可以改变光标位置。
+perl中就可以：print "\e[20;40H";
+
+
+(22) Date::Calc Calendar(), Today()
+
+#!/usr/bin/perl
+use strict;
+use Date::Calc qw(Calendar Today);
+
+my $year = "2003";
+my $month = "6";
+my $day;
+
+my $cal = Calendar($year, $month);
+(undef, undef, $day) = Today();
+
+$cal =~ s/$day/e[5me[31m$daye[0m/;
+
+print $cal;
+exit 0;
+
+本例子打印出一个2003年6月份的日历，当天日期用红色的闪烁数字表示。
+
+Date::Calc提供了时间日期计算的另一种方式（一种是Date::Manip），
+大量简单方便的方法（函数）供使用者调用。
+
+在例子中的年和月我是自己指定的，也可以
+($year, $month, $day) = Today();
+
+颜色和闪烁是用ANSI escape sequences。
+详细说明尽在ANSIColor.pm source和perldoc Term::ANSIColor里。
+（perldoc Term::ANSIColor其实也在ANSIColor.pm source里） ：）
+
+
+
+
+(23) Term::Cap, Tgetend(), Tgoto, Tputs()
+
+#!/usr/bin/perl
+use strict;
+use Term::Cap;
+
+$| = 1;
+my $i = 1;
+my $flag = 0;
+
+my $tcap = Term::Cap->Tgetent({TERM => undef, OSPEED => 1});
+$tcap->Tputs('cl', 1, *STDOUT);#clear screen
+
+while($i)
+{
+if($i > 50 || $flag == 1)
+{
+$i --;
+$flag = 1;
+$flag = 0 if($i == 1);
+}
+else
+{
+$i ++;
+$flag = 0;
+}
+
+$tcap->Tgoto('cm', $i, 15, *STDOUT);#move cursor
+print " welcome to chinaunix! ";
+select(undef, undef, undef, 0.02);
+}
+exit 0;
+
+Term::Cap 终端控制模块。
+代码效果：一个左右移动的字串 "welcome to chinaunix! " ：）
+
+
+
+(24) HTTPD::Log::Filter
+
+#!/usr/bin/perl
+use strict;
+use HTTPD::Log::Filter;
+
+my $filter = HTTPD::Log::Filter->new(format => "CLF",
+capture => ['request', 'host']);
+
+foreach(`cat access_log`)
+{
+chomp;
+unless( $filter->filter($_) )
+{
+print "[$_]\n";
+next;
+}
+print $filter->request, "\n";
+}
+exit 0;
+
+如果我们工作中经常需要分析Apache日志，这个模块可以提供一些方便。
+创建对象实例以后，用filter方法来过滤，没有正确匹配的行将返回false,
+然后用相应的方法print出我们需要的数据。(host,request,date...等等方法，
+由capture选项以参数引入)
+可以用re方法打印出作者所使用的匹配模式：
+
+
+
+QUOTE:use HTTPD::Log::Filter;
+print HTTPD::Log::Filter->new(format=>"CLF",capture=>['request'])->re;
+
+
+详见perldoc HTTPD::Log::Filter. enjoy it
+
+
+
+(25) Net::LDAP
+
+#!/usr/bin/perl
+use Net::LDAP;
+
+## get a object of ldap
+$ldap = Net::LDAP->new("1.1.1.1", port =>"389", version => 3) or die "$@";
+# object of Net::LDAP::Message
+$mesg = $ldap->bind($_cer_id, password => $_cer_pw); # 查詢用的ID/PASSWD
+if($mesg->is_error) {die $mesg->error;}
+$mesg = $ldap->search(
+base => "o=abc,c=tt", # 起始點
+scope => "sub", # 範圍
+filter => "(uid=apile)", # 條件
+attrs => ["cn"], # 要取得的attribute
+typesonly => 0 );
+
+my $max_len = $mesg->count; ## get number of entry
+
+#--取得中文姓名，可能不只一筆
+for($i=0;$i<$max_len;$i++){
+$entry = $mesg->entry($i);
+$cname = $entry->get_value("cn"); # get chinese name
+}
+
+#--作密碼認證
+$mesg = $ldap->bind($entry->dn, password => "abc", version => 3)
+||die "can't connect to ldap";
+if($mesg->code) { print "verification is failed"}
+else{ print "success"}
+
+
+LDAP version 3..可以用于查询基本资料、验证密码之用..
+
+
+(26) Net::SMTP mail(), to(), data(), datasend(), auth()
+
+#!/usr/bin/perl
+
+use strict;
+use Net::SMTP;
+
+my $smtp = Net::SMTP->new('smtp.sohu.com', Timeout => 10, Debug => 0)
+or die "new error\n";
+#$smtp->auth("user", "passwd") or die "auth error\n";
+$smtp->mail('some');
+$smtp->to('some@some.com');
+$smtp->data("chinaunix,哈楼你好啊!\n:)");
+$smtp->quit;
+
+exit 0;
+
+
+有的SMPT Server需要Authentication，那么就使用auth()方法进行验证。
+Debug模式打开，可以看到详细的SMTP命令代码。也有助于我们排错。
+
+
+
+(27) MIME::Base64, encode_base64(), decode_base64()
+
+#!/usr/bin/perl -w
+
+use strict;
+use MIME::Base64;
+
+foreach(<DATA>)
+{
+print decode_base64($_);
+}
+exit 0;
+
+__DATA__
+xOO6w6Osu7bTrcC0tb1jaGluYXVuaXguY29tIFtwZXJsXbDmIQo=
+1eLKx2Jhc2U2NLHgwuu1xMD919OjrNPJTUlNRTo6QmFzZTY0xKO/6cC0veLC66GjCg==
+cGVybGRvYyBNSU1FOjpCYXNlNjQgZm9yIGRldGFpbHMsIGVuam95IGl0IDopCg==
+
+
+用来处理MIME/BASE64编码。
+
+
+
+(28) Net::IMAP::Simple, login(), mailboxes(), select(), get()...
+
+#!/usr/bin/perl
+
+use strict;
+use Net::IMAP::Simple;
+
+my $server = new Net::IMAP::Simple( 'imap.0451.com' );
+$server->login( 'user_name', 'passwd');
+
+#show the mailboxs
+#map {print "$_\n";} $server->mailboxes();
+
+#show mail's content
+my $n = $server->select( 'inbox' ) or die "no this folder\n";
+foreach my $msg ( 1..$n )
+{
+my $lines = $server->get( $msg );
+print @$lines;
+print "_________________ Press enter key to view another! ...... __________________\n";
+read STDIN, my $key, 1;
+}
+
+exit 0;
+
+
+在取得中文的Folder时，会出现乱码的情况，
+这个问题现在没有解决。英文的Folder则没问题。
+
+IMAP协议，默认端口为143，可以用telnet登录。
+
+
+
+QUOTE:telnet imap.xxx.com 143
+2 login user pass
+2 list "" *
+2 select inbox
+......
+
+
+(29) Bio::DB::GenBank, Bio::SeqIO
+
+bioperl(http://bioperl.org/)模块使用--生物信息学中用的模块
+功能：根据核酸的gi号自动从GenBank中提取FASTA格式的序列，可以多序列提取。
+
+
+
+QUOTE:#!/usr/bin/perl -w
+
+use Bio::DB::GenBank;
+use Bio::SeqIO;
+my $gb = new Bio::DB::GenBank;
+
+my $seqout = new Bio::SeqIO(-fh => *STDOUT, -format => 'fasta');
+
+# if you want to get a bunch of sequences use the batch method
+my $seqio = $gb->get_Stream_by_id([ qw(27501445 2981014)]);
+
+while( defined ($seq = $seqio->next_seq )) {
+$seqout->write_seq($seq);
+}
+
+
+(30) Spreadsheet::ParseExcel
+
+perl解析Excel文件的例子。
+
+
+
+QUOTE:#!/usr/bin/perl -w
+
+use strict;
+use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseExcel::FmtUnicode; #gb support
+
+my $oExcel = new Spreadsheet::ParseExcel;
+
+die "You must provide a filename to $0 to be parsed as an Excel file" unless @ARGV;
+my $code = $ARGV[1] || "CP936"; #gb support
+my $oFmtJ = Spreadsheet::ParseExcel::FmtUnicode->new(Unicode_Map => $code); #gb support
+my $oBook = $oExcel->Parse($ARGV[0], $oFmtJ);
+my($iR, $iC, $oWkS, $oWkC);
+print "FILE :", $oBook->{File} , "\n";
+print "COUNT :", $oBook->{SheetCount} , "\n";
+
+print "AUTHOR:", $oBook->{Author} , "\n"
+if defined $oBook->{Author};
+
+for(my $iSheet=0; $iSheet < $oBook->{SheetCount} ; $iSheet++)
+{
+$oWkS = $oBook->{Worksheet}[$iSheet];
+print "--------- SHEET:", $oWkS->{Name}, "\n";
+for(my $iR = $oWkS->{MinRow} ;
+defined $oWkS->{MaxRow} && $iR <= $oWkS->{MaxRow} ;
+$iR++)
+{
+for(my $iC = $oWkS->{MinCol} ;
+defined $oWkS->{MaxCol} && $iC <= $oWkS->{MaxCol} ;
+$iC++)
+{
+$oWkC = $oWkS->{Cells}[$iR][$iC];
+print "( $iR , $iC ) =>", $oWkC->Value, "\n" if($oWkC);
+}
+}
+}
+
+
+(31) Text::CSV_XS, parse(), fields(), error_input()
+
+如果field里面也包含分隔符(比如"tom,jack,jeff","rose mike",O'neil,"kurt,korn")，那么我们
+解析起来确实有点麻烦，
+Text::CSV_XS挺方便。
+
+
+
+QUOTE:#!/usr/bin/perl
+
+use strict;
+use Text::CSV_XS;
+
+my @columns;
+my $csv = Text::CSV_XS->new({
+'binary' => 1,
+'quote_char' => '"',
+'sep_char' => ','
+});
+
+foreach my $line(<DATA>)
+{
+chomp $line;
+if($csv->parse($line))
+{
+@columns = $csv->fields();
+}
+else
+{
+print "[error line : ", $csv->error_input, "]\n";
+}
+
+map {printf("%-14s\t", $_)} @columns;
+print "\n";
+}
+exit 0;
+
+__DATA__
+id,compact_sn,name,type,count,price
+37,"ITO-2003-011","台式机,compaq","128M","290","1,2900"
+35,I-BJ-2003-010,"显示器,硬盘,内存",'三星',480,"1,4800"
+55,"C2003-104",笔记本,"Dell,Latitude,X200",13900,"1,13900"
+
+
+(32) Benchmark
+
+#!/usr/bin/perl
+
+use Benchmark;
+
+timethese(100,
+{
+'local'=>q
+{
+for(1..10000)
+{
+local $a=$_;
+$a *= 2;
+}
+},
+
+'my'=>q
+{
+for(1..10000)
+{
+my $a=$_;
+$a *= 2;
+}
+}
+});
+
+
+可以拿来计算algorithm耗费多少时间.
+
+
+QUOTE:timethese(做几次iteration,{
+'Algorithm名稱'=>q{ 要计算时间的algorithm },
+'Algorithm名稱'=>q{ 要计算时间的algorithm }
+});
+
+
+
+(33) HTTP:: Daemon, accept(), get_request()...
+
+一个简单的，只能处理单一请求的Web服务器模型。
+send_file_response()方法能把Client请求的文件传送过去。
+
+
+QUOTE:#!/usr/bin/perl
+
+use HTTP:: Daemon;
+
+$| = 1;
+my $wwwroot = "/home/doc/";
+my $d = HTTP:: Daemon->new || die;
+print "Perl Web-Server is running at: ", $d->url, " ...\n";
+
+while (my $c = $d->accept)
+{
+print $c "Welcome to Perl Web-Server<br>";
+
+if(my $r = $c->get_request)
+{
+print "Received : ", $r->url->path, "\n";
+$c->send_file_response($wwwroot.$r->url->path);
+}
+
+$c->close;
+}
+
+
+(34) Array::Compare, compare(), full_compare()...
+
+用于数组比较。
+本例实现类似shell command - diff的功能。
+如果我们要比较的不是文件，而是比如系统信息，远程文件列表，数据库内容变化等，这个模块会给我们提供方便灵活的操作。
+
+
+QUOTE:#!/usr/bin/perl
+
+use Array::Compare;
+
+$comp = Array::Compare->new(WhiteSpace => 1);
+$cmd = "top -n1 | head -4";
+@a1 = `$cmd`;
+@a2 = `$cmd`;
+
+@result = $comp->full_compare(@a1, @a2);
+
+foreach(@result)
+{
+print $_ + 1, "th line:\n";
+print "> $a1[$_]> $a2[$_]";
+print "-----\n";
+}
+exit 0;
+
+
+(35) Algorithm::Diff, diff()
+
+用于文件比较。
+实现类似unix command diff的功能。
+
+#!/usr/bin/perl
+
+use Algorithm::Diff qw(diff);
+
+die("Usage: $0 file1 file2\n") if @ARGV != 2;
+
+my ($file1, $file2) = @ARGV;
+-T $file1 or die("$file1: binary\n");
+-T $file2 or die("$file2: binary\n");
+
+@f1 = `cat $file1 `;
+@f2 = `cat $file2 `;
+
+$diffs = diff(@f1, @f2);
+
+foreach $chunk (@$diffs)
+{
+foreach $line (@$chunk)
+{
+my ($sign, $lineno, $text) = @$line;
+printf "$sign%d %s", $lineno+1, $text;
+}
+
+print "--------\n";
+}
+
+
+(36) List::Util, max(), min(), sum(), maxstr(), minstr()...
+
+列表实用工具集。
+
+
+QUOTE:#!/usr/bin/perl
+
+use List::Util qw/max min sum maxstr minstr shuffle/;
+
+@s = ('hello', 'ok', 'china', 'unix');
+
+print max 1..10; #10
+print min 1..10; #1
+print sum 1..10; #55
+print maxstr @s; #unix
+print minstr @s; #china
+print shuffle 1..10; #radom order
+
+
+(37) HTML::Parser
+
+解析HTML。本例为找出一个html文本中的所有图片的地址。（即IMG标签中的src）
+
+子程序start中的"$tag =~ /^img$/"为过滤出img标签。
+如果换为"$tag =~ /^a$/"，即是找出所有的链接地址。
+
+详细的方法介绍，请见`perldoc HTML::Parser`
+
+
+
+QUOTE:#!/usr/bin/perl
+
+use LWP::Simple;
+use HTML::Parser;
+
+my $url = shift || "http://www.chinaunix.net";
+my $content = LWP::Simple::get($url) or die("unknown url\n");
+
+my $parser = HTML::Parser->new(
+start_h => [&start, "tagname, attr"],
+);
+
+$parser->parse($content);
+exit 0;
+
+sub start
+{
+my ($tag, $attr, $dtext, $origtext) = @_;
+if($tag =~ /^img$/)
+{
+if (defined $attr->{'src'} )
+{
+print "$attr->{'src'}\n";
+}
+}
+}
+
+
+(38) Mail::Sender
+
+1)发送附件
+
+
+
+QUOTE:#!/usr/bin/perl
+
+use Mail::Sender;
+
+$sender = new Mail::Sender{
+smtp => 'localhost',
+from => 'xxx@localhost'
+};
+$sender->MailFile({
+to => 'xxx@xxx.com',
+subject => 'hello',
+file => 'Attach.txt'
+});
+$sender->Close();
+
+print $Mail::Sender::Error eq "" ? "send ok!\n" : $Mail::Sender::Error;
+
+
+2)发送html内容
+
+
+
+QUOTE:#!/usr/bin/perl
+
+use Mail::Sender;
+
+open(IN, "< ./index.html") or die("");
+
+$sender = new Mail::Sender{
+smtp => 'localhost',
+from => 'xxx@localhost'
+};
+
+$sender->Open({
+to => 'xxx@xxx.com',
+subject => 'xxx',
+msg => "hello!",
+ctype => "text/html",
+encoding => "7bit",
+});
+
+while(<IN>)
+{
+$sender->SendEx($_);
+}
+close IN;
+$sender->Close();
+
+print $Mail::Sender::Error eq "" ? "send ok!\n" : $Mail::Sender::Error;
+
+发送带有图片或其他信息的html邮件，请看`perldoc Mail::Sender`
+中的"Sending HTML messages with inline images"及相关部分。
+
+
+
+(39) Time::HiRes, gettimeofday(), usleep()
+(40) Image::Magick
+
+
+http://www.imagemagick.org/www/perl.html
+
+
+
+QUOTE:#!/usr/local/bin/perl
+use Image::Magick;
+
+my($image, $x);
+
+$image = Image::Magick->new;
+$x = $image->Read('girl.png', 'logo.png', 'rose.png');
+warn "$x" if "$x";
+
+$x = $image->Crop(geometry=>'100x100"+100"+100');
+warn "$x" if "$x";
+
+$x = $image->Write('x.png');
+warn "$x" if "$x";
+
+
+The script reads three images, crops them, and writes a single image as a GIF animation
+sequence. In many cases you may want to access individual images of a sequence. The next
+example illustrates how this is done:
+
+
+
+QUOTE:#!/usr/local/bin/perl
+use Image::Magick;
+
+my($image, $p, $q);
+
+$image = new Image::Magick;
+$image->Read('x1.png');
+$image->Read('j*.jpg');
+$image->Read('k.miff[1, 5, 3]');
+$image->Contrast();
+for ($x = 0; $image->[x]; $x++)
+{
+$image->[x]->Frame('100x200') if $image->[x]->Get('magick') eq 'GIF';
+undef $image->[x] if $image->[x]->Get('columns') < 100;
+}
+$p = $image->[1];
+$p->Draw(stroke=>'red', primitive=>'rectangle', points=>20,20 100,100');
+$q = $p->Montage();
+undef $image;
+$q->Write('x.miff');
+
+
+Suppose you want to start out with a 100 by 100 pixel white canvas with a red pixel in the
+center. Try
+
+
+
+QUOTE:$image = Image::Magick->new;
+$image->Set(size=>'100x100');
+$image->ReadImage('xc:white');
+$image->Set('pixel[49,49]'=>'red');
+
+
+Or suppose you want to convert your color image to grayscale:
+
+
+
+QUOTE:$image->Quantize(colorspace=>'gray');
+
+Here we annotate an image with a Taipai TrueType font:
+
+$text = 'Works like magick!';
+$image->Annotate(font=>'kai.ttf', pointsize=>40, fill=>'green', text=>$text);
+
+
+Other clever things you can do with a PerlMagick objects include
+
+
+
+QUOTE:$i = $#$p"+1"; # return the number of images associated with object p
+push(@$q, @$p); # push the images from object p onto object q
+@$p = (); # delete the images but not the object p
+$p->Convolve([1, 2, 1, 2, 4, 2, 1, 2, 1]); # 3x3 Gaussian kernel
+
+
+(41) Data::SearchReplace
+
+
+#!/user/bin/perl
+use Data::SearchReplace ('sr');
+sr({ SEARCH => 'searching', REPLACE => 'replacing'}, \$complex_var);
+
+# or OO
+
+use Data::SearchReplace;
+$sr = Data::SearchReplace->new({ SEARCH => 'search for this',
+REPLACE => 'replace with this' });
+
+$sr->sr(\$complex_var);
+$sr->sr(\$new_complex_var);
+
+# if you want more control over your search/replace pattern you
+# can pass an entire regex instead complete with attributes
+
+sr({ REGEX => 's/nice/great/gi' }, \$complex_var);
+
+# you can even use a subroutine if you'd like
+# the input variable is the value and the return sets the new
+# value.
+
+sr({ CODE => sub { uc($_[0]) } }, \$complex_var);
+
+
+
+QUOTE:use Data::SearchReplace qw(sr);
+sr({SEARCH => 'find', REPLACE => 'replace'}, \@data);
+sr({REGEX => 's/find/replace/g'}, \%data);
+sr({CODE => sub {uc($_[0])} }, \@data); 
